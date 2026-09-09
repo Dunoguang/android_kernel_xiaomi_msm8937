@@ -109,43 +109,14 @@ jobs:
 
       - name: Package AnyKernel3 zip
         run: |
-          cp AnyKernel3/anykernel.sh.bak AnyKernel3/anykernel.sh 2>/dev/null || true
-          cat > AnyKernel3/anykernel.sh << 'AKEOF'
-### AnyKernel3 Ramdisk Mod Script
-## osm0sis @ xda-developers
-
-### AnyKernel setup
-properties() { '
-kernel.string=Kernel for Xiaomi Redmi 8/8A (olive/olivelite) by Dunoguang
-do.devicecheck=1
-do.modules=0
-do.systemless=1
-do.cleanup=1
-do.cleanuponabort=0
-device.name1=olive
-device.name2=olivelite
-supported.versions=
-supported.patchlevels=
-supported.vendorpatchlevels=
-'; }
-
-boot_attributes() {
-set_perm_recursive 0 0 755 644 $RAMDISK/*;
-set_perm_recursive 0 0 750 750 $RAMDISK/init* $RAMDISK/sbin;
-}
-
-BLOCK=auto;
-IS_SLOT_DEVICE=0;
-RAMDISK_COMPRESSION=auto;
-PATCH_VBMETA_FLAG=auto;
-
-. tools/ak3-core.sh;
-
-split_boot;
-flash_boot;
-AKEOF
           cp out/arch/arm64/boot/Image AnyKernel3/Image
           cd AnyKernel3
+          sed -i 's/device.name1=maguro/device.name1=olive/' anykernel.sh
+          sed -i 's/device.name2=toro/device.name2=olivelite/' anykernel.sh
+          sed -i 's/device.name3=toroplus/device.name3=/' anykernel.sh
+          sed -i 's/device.name4=tuna/device.name4=/' anykernel.sh
+          sed -i 's/IS_SLOT_DEVICE=0/IS_SLOT_DEVICE=0/' anykernel.sh
+          sed -i 's/BLOCK=\/dev\/block\/platform\/omap/BLOCK=auto/' anykernel.sh
           TS=$(TZ=Asia/Shanghai date +%Y%m%d%H%M%S)
           ZIP="OLIVE-RSSU${vcode}-ByDunoguang-${TS}-AK3.zip"
           zip -r9 "$ZIP" * -x .git README.md '*placeholder'
