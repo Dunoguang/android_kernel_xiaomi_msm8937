@@ -74,8 +74,10 @@ jobs:
           make O=out ARCH=arm64 vendor/msm8937-perf_defconfig
           scripts/config --file out/.config --enable KSU_MANUAL_HOOK
           scripts/config --file out/.config --disable KSU_TRACEPOINT_HOOK
+          scripts/config --file out/.config --enable SECCOMP
+          scripts/config --file out/.config --enable SECCOMP_FILTER
           make O=out ARCH=arm64 olddefconfig
-          grep -E '^CONFIG_(KSU|KSU_MANUAL_HOOK|KALLSYMS|BUILD_ARM64|DEVTMPFS|IPC_NS|USER_NS|FW_LOADER_COMPRESS)=' out/.config || true
+          grep -E '^CONFIG_(KSU|KSU_MANUAL_HOOK|SECCOMP|KALLSYMS|BUILD_ARM64|DEVTMPFS|IPC_NS|USER_NS|FW_LOADER_COMPRESS)=' out/.config || true
 
       - name: Build kernel Image
         run: |
