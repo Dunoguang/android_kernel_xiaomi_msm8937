@@ -1,3 +1,5 @@
+/* KSU forward declarations */
+extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void **arg);
 /*
  *  linux/kernel/reboot.c
  *
@@ -315,6 +317,10 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 	/* We only trust the superuser with rebooting the system. */
 	if (!ns_capable(pid_ns->user_ns, CAP_SYS_BOOT))
 		return -EPERM;
+
+	/* KSU: manual hook */
+	if (ksu_handle_sys_reboot(magic1, magic2, cmd, &arg))
+		return -EFAULT;
 
 	/* For safety, we require "magic" arguments. */
 	if (magic1 != LINUX_REBOOT_MAGIC1 ||

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
 ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2
+ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2/isp
 ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2/sensor
 ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2/codecs
 ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2/isp

@@ -8,6 +8,7 @@ ccflags-y := $(call cc-disable-warning, fortify-source)
 ccflags-y += $(call cc-disable-warning, invalid-source-encoding)
 ccflags-y += $(call cc-disable-warning, switch-bool)
 ccflags-y += $(call cc-disable-warning, unused-but-set-variable)
+ccflags-y += -I$(srctree)
 
 obj-$(CONFIG_TOUCHSCREEN_FT5446_MI439)	+=  focaltech_core.o
 obj-$(CONFIG_TOUCHSCREEN_FT5446_MI439)	+=  focaltech_ex_fun.o

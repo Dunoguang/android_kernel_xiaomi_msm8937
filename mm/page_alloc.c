@@ -2219,6 +2219,22 @@ static int move_freepages(struct zone *zone,
 			continue;
 		}
 
+		/*
+		 * Skip buddy pages with corrupted LRU pointers (already
+		 * list_del'd). This can happen due to memory corruption
+		 * from use-after-free or double-free in other subsystems.
+		 * Clear PageBuddy to prevent future access to this page.
+		 */
+		if (unlikely(page->lru.next == LIST_POISON1)) {
+			WARN_ONCE(1, "move_freepages: page %lx (order %d) "
+				"has corrupted LRU (LIST_POISON1), "
+				"clearing PageBuddy\n",
+				page_to_pfn(page), page_order(page));
+			__ClearPageBuddy(page);
+			page++;
+			continue;
+		}
+
 		order = page_order(page);
 		list_move(&page->lru,
 			  &zone->free_area[order].free_list[migratetype]);
@@ -3062,6 +3078,9 @@ static void free_unref_page_commit(struct page *page, unsigned long pfn)
 	}
 
 	pcp = &this_cpu_ptr(zone->pageset)->pcp;
+	/* Fix: reinitialize LRU if poisoned by a prior list_del */
+	if (unlikely(page->lru.next == LIST_POISON1))
+		INIT_LIST_HEAD(&page->lru);
 	list_add(&page->lru, &pcp->lists[migratetype]);
 	pcp->count++;
 	if (pcp->count >= pcp->high) {
@@ -3095,6 +3114,33 @@ void free_unref_page_list(struct list_head *list)
 	unsigned long flags, pfn;
 	int batch_count = 0;
 
+	/* Fix: sanitize poisoned LRU pointers before safe iteration.
+	 * Pages with lru.next == LIST_POISON1 were list_del'd but left in
+	 * page_list. We cannot use list_del() on them as it would access
+	 * the corrupted next pointer. Instead, sever via prev link. */
+	LIST_HEAD(poisoned_pages);
+	{
+		struct list_head *cur = list->next;
+		while (cur != list) {
+			struct list_head *nxt = cur->next;
+			if (nxt == LIST_POISON1) {
+				/*
+				 * cur->next is corrupted. Unlink via prev
+				 * without dereferencing next->prev, then
+				 * break since the chain is broken here.
+				 */
+				if (cur->prev && cur->prev->next == cur) {
+					cur->prev->next = list;
+					list->prev = cur->prev;
+				}
+				INIT_LIST_HEAD(cur);
+				list_add(cur, &poisoned_pages);
+				break;
+			}
+			cur = nxt;
+		}
+	}
+
 	/* Prepare pages for freeing */
 	list_for_each_entry_safe(page, next, list, lru) {
 		pfn = page_to_pfn(page);
@@ -3122,6 +3168,15 @@ void free_unref_page_list(struct list_head *list)
 		}
 	}
 	local_irq_restore(flags);
+
+	/* Free any pages removed during poisoned-pointer sanitization */
+	{
+		struct page *pg, *tmp;
+		list_for_each_entry_safe(pg, tmp, &poisoned_pages, lru) {
+			list_del(&pg->lru);
+			free_unref_page(pg);
+		}
+	}
 }
 
 /*

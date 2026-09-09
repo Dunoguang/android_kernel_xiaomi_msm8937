@@ -1,3 +1,7 @@
+/* KSU forward declarations */
+extern int ksu_handle_stat(int *dfd, const char __user **filename, int *flags);
+extern void ksu_handle_newfstat_ret(unsigned int *fd, void *statbuf);
+extern void ksu_handle_fstat64_ret(unsigned long *fd, void *statbuf);
 // SPDX-License-Identifier: GPL-2.0
 /*
  *  linux/fs/stat.c
@@ -363,6 +367,8 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
 	error = vfs_fstatat(dfd, filename, &stat, flag);
 	if (error)
 		return error;
+	/* KSU: manual hook */
+	ksu_handle_stat(&dfd, &filename, &flag);
 	return cp_new_stat(&stat, statbuf);
 }
 #endif
@@ -375,6 +381,8 @@ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
 	if (!error)
 		error = cp_new_stat(&stat, statbuf);
 
+	/* KSU: manual hook */
+	ksu_handle_newfstat_ret(&fd, &statbuf);
 	return error;
 }
 
@@ -501,6 +509,8 @@ SYSCALL_DEFINE2(fstat64, unsigned long, fd, struct stat64 __user *, statbuf)
 	if (!error)
 		error = cp_new_stat64(&stat, statbuf);
 
+	/* KSU: manual hook */
+	ksu_handle_fstat64_ret(&fd, &statbuf);
 	return error;
 }
 

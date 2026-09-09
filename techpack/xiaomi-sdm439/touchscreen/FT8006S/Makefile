@@ -1,5 +1,7 @@
 # Makefile for the focaltech touchscreen drivers.
 
+ccflags-y += -I$(srctree)
+
 
 obj-$(CONFIG_TOUCHSCREEN_FT8006S_MI439)	+=  focaltech_core.o
 obj-$(CONFIG_TOUCHSCREEN_FT8006S_MI439)	+=  focaltech_ex_fun.o
