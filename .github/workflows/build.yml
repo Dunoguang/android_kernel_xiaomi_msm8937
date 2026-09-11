@@ -45,6 +45,7 @@ jobs:
 
       - name: Update KernelSU to latest
         run: |
+          git -C KernelSU fetch --unshallow origin
           git -C KernelSU fetch origin main
           git -C KernelSU checkout origin/main
 
