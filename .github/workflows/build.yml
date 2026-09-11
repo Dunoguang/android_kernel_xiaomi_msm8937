@@ -42,9 +42,11 @@ jobs:
           git reset --hard origin/lineage-23.2
           git submodule foreach --recursive 'git reset --hard HEAD; git clean -fdx' 2>/dev/null || true
           git submodule update --init --recursive
-          if git -C KernelSU rev-parse --is-shallow-repository 2>/dev/null | grep -q true; then
-            git -C KernelSU fetch --unshallow origin
-          fi
+
+      - name: Update KernelSU to latest
+        run: |
+          git -C KernelSU fetch origin main
+          git -C KernelSU checkout origin/main
 
       - name: Install dependencies
         run: |
